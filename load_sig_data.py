@@ -24,7 +24,6 @@ def resize_images(path):
             continue
         image = cv.imread(os.path.join(path,filename))
         new_image = cv.resize(image,(image_size,image_size))
-        print("resizing image: " + filename)
         cv.imwrite(os.path.join(save_path,resized_path,filename),new_image)
 
 
@@ -35,7 +34,7 @@ def loadimgs(path):
         os.chdir(data_path)
         os.system("unzip {}".format(path+".zip" ))
     X=[]
-    author_ids = []
+    author_dict = {}
     #we load every alphabet seperately so we can isolate them later
     for filename in os.listdir(path):
         if filename == '.DS_Store':
@@ -44,21 +43,29 @@ def loadimgs(path):
         author_id = filename[:filename.find('_')]
         if author_id == 'Anonymous':
             continue
-        image = imread(os.path.join(path,filename))
+        image = cv.imread(os.path.join(path,filename),0)
         X.append(image)
-        author_ids.append(author_id)
+        update_author_dict(author_dict, author_id, len(X) - 1)
     # X = np.stack(X)
     # author_ids = np.stack(author_ids)
-    return X,author_ids
+    return X,author_dict
+
+def update_author_dict(author_dict, author_id, index):
+    if(author_dict.get(author_id) == None):
+        author_dict[author_id] = []
+    author_dict[author_id].append(index)
+    
 
 resize_images(data_path)
 X,author_ids=loadimgs(os.path.join(save_path,resized_path))
-with open(os.path.join(save_path,"sig_data.pickle"), "wb") as f:
+with open(os.path.join(save_path,"sig_data_train.pickle"), "wb") as f:
 	pickle.dump((X,author_ids),f)
 
 # verify the pickled data
-with open(os.path.join(save_path, "sig_data.pickle"), "rb") as f:
-    (X,author_ids) = pickle.load(f)
-    print("len of X {}".format(len(X)))
-    print("shape of image 10: {}".format(X[9].shape))
-    print("len of author_ids {}".format(len(author_ids)))
+with open(os.path.join(save_path, "sig_data_train.pickle"), "rb") as f:
+    (X_loaded,author_dict_loaded) = pickle.load(f)
+    print("len of X_loaded {}".format(len(X_loaded)))
+    print("shape of image 10: {}".format(X_loaded[9].shape))
+    print("len of author_dict_loaded {}".format(len(author_dict_loaded)))
+    for author_id, sigs in author_dict_loaded.items():
+        print("{}: {}".format(author_id, len(sigs)))
