@@ -35,11 +35,15 @@ def loadimgs(path,n=0):
     curr_y = n
     #we load every alphabet seperately so we can isolate them later
     for alphabet in os.listdir(path):
+        if alphabet == '.DS_Store':
+            continue
         print("loading alphabet: " + alphabet)
         lang_dict[alphabet] = [curr_y,None]
         alphabet_path = os.path.join(path,alphabet)
         #every letter/category has it's own column in the array, so  load seperately
         for letter in os.listdir(alphabet_path):
+            if letter == '.DS_Store':
+                continue
             cat_dict[curr_y] = (alphabet, letter)
             category_images=[]
             letter_path = os.path.join(alphabet_path, letter)
