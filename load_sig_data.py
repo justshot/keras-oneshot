@@ -3,6 +3,7 @@ import numpy as np
 from scipy.misc import imread
 import pickle
 import os
+import glob
 import matplotlib.pyplot as plt
 import argparse
 import cv2 as cv
@@ -11,18 +12,25 @@ import cv2 as cv
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data",help="Path where signature images folder resides")
-parser.add_argument("--save", help = "Path to pickle data to.", default=os.getcwd())
+parser.add_argument("--save_file", help = "pickle file name")
 args = parser.parse_args()
 data_path = args.data
-save_path = args.save
+save_file_name = args.save_file
+
+save_path = os.getcwd()
 resized_path = 'resized'
 image_size = 105
 
-def resize_images(path):
-    for filename in os.listdir(path):
+def clear_resize_folder():
+    files = glob.glob(os.path.join(save_path,resized_path))
+    for f in files:
+        os.remove(f)
+
+def resize_images(input_path):
+    for filename in os.listdir(input_path):
         if filename == '.DS_Store':
             continue
-        image = cv.imread(os.path.join(path,filename))
+        image = cv.imread(os.path.join(input_path,filename))
         new_image = cv.resize(image,(image_size,image_size))
         cv.imwrite(os.path.join(save_path,resized_path,filename),new_image)
 
@@ -54,18 +62,19 @@ def update_author_dict(author_dict, author_id, index):
     if(author_dict.get(author_id) == None):
         author_dict[author_id] = []
     author_dict[author_id].append(index)
-    
 
-resize_images(data_path)
-X,author_ids=loadimgs(os.path.join(save_path,resized_path))
-with open(os.path.join(save_path,"sig_data_train.pickle"), "wb") as f:
-	pickle.dump((X,author_ids),f)
+if __name__ == '__main__':
 
-# verify the pickled data
-with open(os.path.join(save_path, "sig_data_train.pickle"), "rb") as f:
-    (X_loaded,author_dict_loaded) = pickle.load(f)
-    print("len of X_loaded {}".format(len(X_loaded)))
-    print("shape of image 10: {}".format(X_loaded[9].shape))
-    print("len of author_dict_loaded {}".format(len(author_dict_loaded)))
-    for author_id, sigs in author_dict_loaded.items():
-        print("{}: {}".format(author_id, len(sigs)))
+    resize_images(data_path)
+    X,author_ids=loadimgs(os.path.join(save_path,resized_path))
+    with open(os.path.join(save_path,save_file_name), "wb") as f:
+        pickle.dump((X,author_ids),f)
+
+    # verify the pickled data
+    with open(os.path.join(save_path, save_file_name), "rb") as f:
+        (X_loaded,author_dict_loaded) = pickle.load(f)
+        print("len of X_loaded {}".format(len(X_loaded)))
+        print("shape of image 10: {}".format(X_loaded[9].shape))
+        print("len of author_dict_loaded {}".format(len(author_dict_loaded)))
+        for author_id, sigs in author_dict_loaded.items():
+            print("{}: {}".format(author_id, len(sigs)))
